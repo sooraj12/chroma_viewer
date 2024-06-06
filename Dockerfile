@@ -1,24 +1,31 @@
-FROM python:3.11-bookworm as builder
+FROM python:3.11-slim as builder
 
 WORKDIR /app
 
 COPY ./requirements.txt requirements.txt
 
-RUN python -m venv /venv
-ENV PATH="/venv/bin:$PATH"
+RUN python -m venv /venv \
+    && . /venv/bin/activate \
+    && pip install --upgrade pip \
+    && pip install -r requirements.txt \
+    && find /venv -name '__pycache__' -exec rm -r {} + \
+    && find /venv -name '*.pyc' -exec rm -r {} + \
+    && find /venv -name '*.pyo' -exec rm -r {} +
 
-RUN pip install --upgrade pip \
-    && pip install -r requirements.txt
-
-FROM python:3.11-bookworm
+FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV PATH="/venv/bin:$PATH"
 
 WORKDIR /app
 
 COPY --from=builder /venv /venv
 COPY . .
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m appuser
 USER appuser
