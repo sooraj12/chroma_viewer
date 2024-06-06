@@ -1,0 +1,10 @@
+services:
+  chromadb_viewer:
+    container_name: chromadb_viewer
+    image: chromadb_viewer/image
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: always
+    ports:
+      - "8501:8501"
