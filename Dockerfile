@@ -1,4 +1,4 @@
-FROM python:3.11-slim as builder
+FROM python:3.11-slim-bookworm as builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ RUN python -m venv /venv \
     && find /venv -name '*.pyc' -exec rm -r {} + \
     && find /venv -name '*.pyo' -exec rm -r {} +
 
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
