@@ -8,3 +8,10 @@ services:
     restart: always
     ports:
       - "8501:8501"
+    networks:
+      - chat_network
+
+
+networks:
+  chat_network:
+    external: true

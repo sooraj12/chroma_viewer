@@ -7,31 +7,25 @@ from chromadb.config import Settings
 
 # Initialize the ChromaDB client
 def get_chroma_client():
-    # client = chromadb.Client(Settings(chroma_api_impl="rest",
-    #                                   chroma_server_host="localhost",
-    #                                   chroma_server_http_port="8000"))
-
-    try:
-        client = chromadb.HttpClient(
-            host="0.0.0.0",
-            port=8000,
-            settings=Settings(allow_reset=True, anonymized_telemetry=False),
-        )
-    except Exception as e:
-        print(e)
+    client = chromadb.HttpClient(
+        host="assistant_archival_db",
+        port=8000,
+        settings=Settings(allow_reset=True, anonymized_telemetry=False),
+    )
 
     return client
 
 
 def main():
-    view_database(get_chroma_client())
+    client = get_chroma_client()
+    view_database(client)
 
 
 def view_database(client):
-    collections = client.list_collections()  # get the list of collections\
+    collections = client.list_collections()  # get the list of collections
     print(collections)
     if not collections:  # check if collections list is empty
-        st.write("Es gibt keine Sammlungen.")
+        st.write("There are no collections.")
         return
 
     collection_names = [
@@ -39,62 +33,58 @@ def view_database(client):
     ]  # get the names of the collections
 
     # use the names for the selectbox
-    selected_collection_name = st.selectbox("Wähle eine Sammlung aus", collection_names)
+    selected_collection_name = st.selectbox("Select a collection", collection_names)
 
     # get the selected collection object when needed
     selected_collection = client.get_collection(selected_collection_name)
 
     # Create a sidebar menu
     menu_options = [
-        "Visualisiere Sammlung",
-        "Füge Element hinzu",
-        "Aktualisiere Element",
-        "Lösche Element",
+        "Visualize Collection",
+        "Add Item",
+        "Update Item",
+        "Delete Item",
     ]
-    selected_option = st.sidebar.selectbox("Wähle eine Aktion", menu_options)
+    selected_option = st.sidebar.selectbox("Choose an action", menu_options)
 
-    if selected_option == "Visualisiere Sammlung":
+    if selected_option == "Visualize Collection":
         visualize(selected_collection)
 
-    elif selected_option == "Füge Element hinzu":
-        new_item_embedding = st.text_input("Gib die Einbettung des neuen Elements ein:")
-        new_item_metadata = st.text_input("Gib die Metadaten des neuen Elements ein:")
-        new_item_id = st.text_input("Gib die ID des neuen Elements ein:")
+    elif selected_option == "Add Item":
+        new_item_embedding = st.text_input("Enter the embedding of the new item:")
+        new_item_metadata = st.text_input("Enter the metadata of the new item:")
+        new_item_id = st.text_input("Enter the ID of the new item:")
 
         # Add new item to the collection
-        if st.button("Füge Element hinzu"):
+        if st.button("Add Item"):
             selected_collection.add(
                 embeddings=[float(new_item_embedding)],
                 metadatas={"meta": new_item_metadata},
                 ids=new_item_id,
             )
-            st.write(f"Element {new_item_id} wurde hinzugefügt.")
+            st.write(f"Item {new_item_id} has been added.")
 
-    elif selected_option == "Aktualisiere Element":
+    elif selected_option == "Update Item":
         # Update an existing item in the collection
-        item_id_to_update = st.text_input(
-            "Gib die ID des zu aktualisierenden Elements ein:"
-        )
+        item_id_to_update = st.text_input("Enter the ID of the item to update:")
         updated_item_embedding = st.text_input(
-            "Gib die aktualisierte Einbettung des Elements ein:"
+            "Enter the updated embedding of the item:"
         )
-        updated_item_metadata = st.text_input(
-            "Gib die aktualisierten Metadaten des Elements ein:"
-        )
-        if st.button("Aktualisiere Element"):
+        updated_item_metadata = st.text_input("Enter the updated metadata of the item:")
+        if st.button("Update Item"):
             selected_collection.update(
                 ids=item_id_to_update,
                 embeddings=[float(updated_item_embedding)],
                 metadatas={"meta": updated_item_metadata},
             )
-            st.write(f"Element {item_id_to_update} wurde aktualisiert.")
+            st.write(f"Item {item_id_to_update} has been updated.")
 
-    elif selected_option == "Lösche Element":
+    elif selected_option == "Delete Item":
         # Delete an item from the collection
-        item_id_to_delete = st.text_input("Gib die ID des zu löschenden Elements ein:")
-        if st.button("Lösche Element"):
+        item_id_to_delete = st.text_input("Enter the ID of the item to delete:")
+        if st.button("Delete Item"):
             selected_collection.delete(ids=item_id_to_delete)
-            st.write(f"Element {item_id_to_delete} wurde gelöscht.")
+            st.write(f"Item {item_id_to_delete} has been deleted.")
 
 
 def visualize(collection):
